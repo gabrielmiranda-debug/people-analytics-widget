@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>People Analytics News Widget</title>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: transparent;
+      color: #eee;
+    }
+
+    .card {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .news-container {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .news-item {
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      transition: 0.2s;
+    }
+
+    .news-item:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    a {
+      text-decoration: none;
+      color: #4ea8ff;
+      font-weight: 600;
+    }
+
+    p {
+      font-size: 13px;
+      margin: 6px 0 0;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>📰 People Analytics — Últimas Notícias</h2>
+    <div id="news" class="news-container">Carregando notícias...</div>
+  </div>
+
+  <script>
+    const rssUrl =
+      "https://news.google.com/rss/search?q=%22people+analytics%22&hl=pt-BR&gl=BR&ceid=BR:pt-419";
+
+    async function loadNews() {
+      try {
+        const response = await fetch(
+          "https://api.allorigins.win/get?url=" + encodeURIComponent(rssUrl)
+        );
+        const data = await response.json();
+
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(data.contents, "text/xml");
+        const items = xml.querySelectorAll("item");
+
+        const container = document.getElementById("news");
+        container.innerHTML = "";
+
+        items.forEach((item, index) => {
+          if (index >= 5) return;
+
+          const title = item.querySelector("title").textContent;
+          const link = item.querySelector("link").textContent;
+          const desc = (item.querySelector("description")?.textContent || "")
+                        .replace(/<[^>]*>?/gm, "")
+                        .trim()
+                        .substring(0, 120);
+
+          const div = document.createElement("div");
+          div.className = "news-item";
+          div.innerHTML = `
+            <a href="${link}" target="_blank">${title}</a>
+            <p>${desc}...</p>
+          `;
+          container.appendChild(div);
+        });
+      } catch (e) {
+        document.getElementById("news").innerHTML =
+          "Não foi possível carregar notícias.";
+      }
+    }
+
+    loadNews();
+  </script>
+</body>
+</html>
